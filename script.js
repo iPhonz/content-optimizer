@@ -1,3 +1,7 @@
+// Gemini API configuration
+const GEMINI_API_KEY = 'AIzaSyChlnFPC5eOpr1VdrViCTj6PJxiQ52xm6M';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const contentInput = document.getElementById('content');
@@ -7,72 +11,69 @@ document.addEventListener('DOMContentLoaded', function() {
     const reachElement = document.getElementById('reach');
     const scoreElement = document.getElementById('score');
 
-    // Enhanced mock data with more realistic values
+    // Best posting times based on general social media data
     const mockTimeSlots = [
         { time: '9:00 AM', engagement: 75, reason: 'Peak morning activity' },
         { time: '2:00 PM', engagement: 85, reason: 'Post-lunch engagement spike' },
         { time: '6:00 PM', engagement: 95, reason: 'Evening prime time' }
     ];
 
-    // Dynamic suggestions based on content analysis
-    function generateSuggestions(content) {
-        const suggestions = [];
-        
-        // Length-based suggestions
-        if (content.length < 50) {
-            suggestions.push('Consider adding more detail to increase engagement');
-        } else if (content.length > 200) {
-            suggestions.push('Your post might be too long - consider breaking it into multiple posts');
-        }
+    async function analyzeContentWithGemini(content) {
+        const prompt = `
+            Analyze this social media post and provide specific improvements:
+            "${content}"
+            
+            Respond in the following JSON format:
+            {
+                "suggestions": [
+                    "suggestion1",
+                    "suggestion2",
+                    "suggestion3"
+                ],
+                "engagementScore": 8.5,
+                "reasonForScore": "Brief explanation",
+                "estimatedReach": "2.4K",
+                "contentStrengths": ["strength1", "strength2"],
+                "contentWeaknesses": ["weakness1", "weakness2"]
+            }
+            
+            Make suggestions very specific and actionable. Consider:
+            - Clarity and readability
+            - Engagement potential
+            - Use of hashtags
+            - Call to action
+            - Emotional appeal
+            - Current social media trends
+        `;
 
-        // Content analysis
-        if (!content.includes('?')) {
-            suggestions.push('Add a question to encourage responses');
-        }
-        if (!content.includes('#')) {
-            suggestions.push('Include relevant hashtags to increase visibility');
-        }
-        if (content.split(' ').length > 30) {
-            suggestions.push('Consider making your message more concise');
-        }
+        try {
+            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }]
+                })
+            });
 
-        // Add default suggestions if none were generated
-        if (suggestions.length === 0) {
-            suggestions.push(
-                'Consider adding an image for 2.3x more engagement',
-                'Use trending hashtag #TechInnovation',
-                'Tag relevant industry leaders'
-            );
+            const data = await response.json();
+            
+            // Extract the JSON response from Gemini's text output
+            const textResponse = data.candidates[0].content.parts[0].text;
+            const jsonStartIndex = textResponse.indexOf('{');
+            const jsonEndIndex = textResponse.lastIndexOf('}') + 1;
+            const jsonStr = textResponse.substring(jsonStartIndex, jsonEndIndex);
+            
+            return JSON.parse(jsonStr);
+        } catch (error) {
+            console.error('Error analyzing content:', error);
+            return null;
         }
-
-        return suggestions;
-    }
-
-    // Calculate engagement score based on content
-    function calculateEngagementScore(content) {
-        let score = 7.0; // Base score
-        
-        // Length factor
-        const wordCount = content.split(' ').length;
-        if (wordCount >= 15 && wordCount <= 25) score += 1;
-        
-        // Question factor
-        if (content.includes('?')) score += 0.5;
-        
-        // Hashtag factor
-        const hashtagCount = (content.match(/#/g) || []).length;
-        if (hashtagCount > 0 && hashtagCount <= 3) score += 0.5;
-        
-        // Cap at 10
-        return Math.min(10, score).toFixed(1);
-    }
-
-    // Simulate audience reach calculation
-    function calculateReach(content, score) {
-        const baseReach = 2000;
-        const multiplier = score / 5; // Score of 5 = normal reach
-        const reach = Math.round(baseReach * multiplier);
-        return reach.toLocaleString();
     }
 
     analyzeBtn.addEventListener('click', async function() {
@@ -88,29 +89,32 @@ document.addEventListener('DOMContentLoaded', function() {
         analyzeBtn.classList.add('loading');
         analyzeBtn.textContent = 'Analyzing...';
 
-        // Simulate API call with random delay
-        await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-
-        // Generate results
-        const score = calculateEngagementScore(content);
-        const reach = calculateReach(content, score);
-        const suggestions = generateSuggestions(content);
-
-        // Display results
-        displayResults(score, reach, suggestions);
-
-        // Reset button
-        analyzeBtn.disabled = false;
-        analyzeBtn.classList.remove('loading');
-        analyzeBtn.textContent = 'Analyze & Optimize';
+        try {
+            // Get AI analysis
+            const analysis = await analyzeContentWithGemini(content);
+            
+            if (analysis) {
+                displayResults(analysis);
+            } else {
+                throw new Error('Analysis failed');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Sorry, there was an error analyzing your content. Please try again.');
+        } finally {
+            // Reset button
+            analyzeBtn.disabled = false;
+            analyzeBtn.classList.remove('loading');
+            analyzeBtn.textContent = 'Analyze & Optimize';
+        }
     });
 
-    function displayResults(score, reach, suggestions) {
+    function displayResults(analysis) {
         // Show results section with animation
         resultsSection.classList.remove('hidden');
         resultsSection.classList.add('fade-in');
 
-        // Display time slots with enhanced information
+        // Display time slots
         timeSlotsContainer.innerHTML = mockTimeSlots
             .map(slot => `
                 <div class="bg-white p-4 rounded-lg shadow-sm metric-card">
@@ -121,8 +125,14 @@ document.addEventListener('DOMContentLoaded', function() {
             `)
             .join('');
 
-        // Display suggestions with hover effects
-        suggestionsContainer.innerHTML = suggestions
+        // Display AI-generated suggestions
+        const allSuggestions = [
+            ...analysis.suggestions,
+            ...analysis.contentStrengths.map(strength => `💪 Strength: ${strength}`),
+            ...analysis.contentWeaknesses.map(weakness => `🎯 Area to improve: ${weakness}`)
+        ];
+
+        suggestionsContainer.innerHTML = allSuggestions
             .map(suggestion => `
                 <li class="suggestion-item">
                     • ${suggestion}
@@ -130,9 +140,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `)
             .join('');
 
-        // Display metrics with animations
-        reachElement.textContent = `~${reach}`;
-        scoreElement.textContent = `${score}/10`;
+        // Display metrics
+        reachElement.textContent = analysis.estimatedReach;
+        scoreElement.textContent = `${analysis.engagementScore}/10`;
 
         // Add hover effects to metric cards
         document.querySelectorAll('.metric-card').forEach(card => {
