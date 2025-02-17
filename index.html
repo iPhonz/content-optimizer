@@ -3,44 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AI-powered social media content optimization tool using Google Gemini">
+    <meta name="description" content="AI-powered social media content optimization tool for multiple platforms">
     <meta name="theme-color" content="#3B82F6">
     
-    <!-- CORS Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://generativelanguage.googleapis.com; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
-    
-    <title>AI Content Optimizer</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHpSURBVFhH7ZY9SwNBEIYnRrFQRLCwEEQQRBAEQcTOzk5Jb6Wdv8BaCVZWFjY2dhZaKVgJYmOhYCEIFgoWCn4giI3P7N5c9m5v924TgoV58MLu7OzMvDszl7tMQRCkGpw3YtZ93qhxbmKCZrZGBptjaX/Y+PiP4V0p7oVpbIyl/WFT44ahGFwz5iYSsjnCcK4pjMWIOX2ZjXGxEyP+UBGhQH8YO6sBHhUY5wRRZ2onQNhKUEJZrcYvB0u4EDMxFmZVgbGTAB5X9BMgbspCNQTn8hNUY2wKOQ9XIZ4kSEJZrcZfQBaoC4QfizKzIoDhmoW4s1BDcO5cwGAsxowqoHhLkISyWo0/HyzxSMyPxAwJUCwQX4gZymo1/gKwxFtieigmEeALBLEgpnxCYSzhScyGIXKAz2sgvJMvvwD/IMUjYQmnYiaM1QAf10B4t4sVcCnmwrAvgI8EuLkEZbUafwFY4k5M5sWUBajpnwA7n6CsVuOXgyVcipmcmBkBapGAm0tQVqvJLoAVvS8SjFNtEAfOEGmvgbtL8A9SrIJ/L6AuEBh+L6FQACGGLvG/B08CfAEO1onwCN4fMRR3D3R/RtXmPaGsVpNdgB+QnqMazT2hrFaT7QqQ0PgFKKvVBD8vApHLfQMdIvYWKhQqrwAAAABJRU5ErkJggg==">
+    <title>Multi-Platform Content Optimizer</title>
     
     <!-- External CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-
-    <!-- Open Graph tags -->
-    <meta property="og:title" content="AI Content Optimizer">
-    <meta property="og:description" content="Optimize your social media content using Google Gemini AI">
-    <meta property="og:type" content="website">
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <div class="bg-white rounded-lg shadow-lg p-6">
             <header class="mb-6">
-                <h1 class="text-2xl font-bold text-gray-800">AI Content Optimizer</h1>
-                <p class="text-gray-600">Optimize your social media content using Google Gemini AI</p>
+                <h1 class="text-2xl font-bold text-gray-800">Multi-Platform Content Optimizer</h1>
+                <p class="text-gray-600">Optimize your content across major social media platforms</p>
             </header>
 
             <div class="space-y-6">
+                <!-- Platform Selection -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="platform" class="block text-sm font-medium text-gray-700">Target Platform</label>
+                        <select id="platform" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="all">All Platforms</option>
+                            <option value="twitter">Twitter</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="tiktok">TikTok</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="contentType" class="block text-sm font-medium text-gray-700">Content Type</label>
+                        <select id="contentType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="text">Text Post</option>
+                            <option value="image">Image Post</option>
+                            <option value="video">Video Post</option>
+                            <option value="link">Link Share</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- Content Input -->
                 <div>
-                    <label for="content" class="block text-sm font-medium text-gray-700">Your Post Content</label>
+                    <label for="content" class="block text-sm font-medium text-gray-700">Your Content</label>
                     <textarea
                         id="content"
                         rows="4"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Type or paste your post content here..."
+                        placeholder="Type or paste your content here..."
                     ></textarea>
+                    <div id="characterCount" class="mt-1 text-sm text-gray-500">0 characters</div>
                 </div>
 
                 <!-- Analyze Button -->
@@ -53,13 +69,18 @@
 
                 <!-- Results Section -->
                 <div id="results" class="hidden space-y-6">
+                    <!-- Platform-specific Analysis -->
+                    <div id="platformAnalysis" class="bg-white rounded-lg shadow-sm p-4">
+                        <!-- Filled dynamically -->
+                    </div>
+
                     <!-- Best Times -->
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="font-semibold text-gray-800 mb-3">Recommended Posting Times</h3>
                         <div id="timeSlots" class="grid grid-cols-3 gap-4"></div>
                     </div>
 
-                    <!-- AI Analysis -->
+                    <!-- AI Suggestions -->
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h3 class="font-semibold text-green-800 mb-2">AI Content Analysis</h3>
                         <ul id="suggestions" class="space-y-2 text-green-700"></ul>
@@ -79,6 +100,14 @@
                             <div class="text-sm text-gray-600">AI-predicted engagement</div>
                         </div>
                     </div>
+
+                    <!-- Trending Topics -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-semibold text-gray-800 mb-2">Trending Topics</h3>
+                        <div id="trendingTopics" class="flex flex-wrap gap-2">
+                            <!-- Filled dynamically -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -87,6 +116,13 @@
         <footer class="mt-8 text-center text-gray-600 text-sm">
             <p>Created by iPhonz - <a href="https://github.com/iPhonz/content-optimizer" class="text-blue-600 hover:text-blue-800">View on GitHub</a></p>
             <p class="mt-2">Powered by Google Gemini AI</p>
+            <div class="mt-2 flex justify-center space-x-4">
+                <i class="fab fa-twitter text-blue-400"></i>
+                <i class="fab fa-instagram text-pink-600"></i>
+                <i class="fab fa-linkedin text-blue-700"></i>
+                <i class="fab fa-facebook text-blue-600"></i>
+                <i class="fab fa-tiktok text-black"></i>
+            </div>
         </footer>
     </div>
     
