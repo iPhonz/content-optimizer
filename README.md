@@ -1,6 +1,6 @@
 # AI Content Optimizer
 
-A web-based tool for optimizing social media content using AI-powered analysis and recommendations.
+A comprehensive tool for optimizing social media content across multiple platforms, powered by Google's Gemini AI.
 
 ## Live Demo
 
@@ -8,18 +8,62 @@ Visit the live demo at: [https://iphonz.github.io/content-optimizer/](https://ip
 
 ## Features
 
-- Content analysis and optimization suggestions
-- Best posting time recommendations
+### Content Analysis
+- Platform-specific recommendations
 - Engagement prediction
-- Audience reach estimation
-- Mobile-responsive design
-- Real-time analysis
+- Hashtag optimization
+- Best posting time suggestions
+- Cross-posting strategy
+
+### Media Analysis
+- Image and video optimization
+- Platform compatibility checks
+- Technical analysis (dimensions, format, size)
+- Accessibility recommendations
+- Engagement tips
+
+### Supported Platforms
+- Twitter
+- Instagram
+- LinkedIn
+- Facebook
+- TikTok
+
+### Media Support
+- Images (PNG, JPG, GIF)
+- Videos (MP4)
+- Size limit: 10MB
+- Automatic format validation
+- Platform-specific dimension checks
+
+## Technical Features
+
+### Content Analysis
+- Real-time character counting
+- Platform-specific length limits
+- Hashtag analysis
+- AI-powered content suggestions
+
+### Media Analysis
+- Dimension analysis
+- Aspect ratio validation
+- File size optimization
+- Format compatibility
+- Quality scoring
+
+### Platform-Specific Features
+- Custom requirements per platform
+- Format restrictions
+- Size limitations
+- Duration constraints
+- Resolution recommendations
 
 ## Technology Stack
 
 - HTML5
 - CSS3 (with Tailwind CSS)
 - JavaScript
+- Google Gemini AI API
 - GitHub Pages for hosting
 
 ## Local Development
