@@ -103,42 +103,50 @@
     transform: scaleX(1);
 }
 
-/* Tooltip styles */
-[data-tooltip] {
-    position: relative;
+/* Platform-specific colors */
+.platform-twitter { color: #1DA1F2; }
+.platform-instagram { color: #E4405F; }
+.platform-linkedin { color: #0A66C2; }
+.platform-facebook { color: #1877F2; }
+.platform-tiktok { color: #000000; }
+
+/* Character count warning */
+.text-red-500 {
+    animation: pulse 2s infinite;
 }
 
-[data-tooltip]:before {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 4px 8px;
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Tooltip styles */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+    width: 200px;
     background-color: #1F2937;
     color: white;
-    font-size: 12px;
-    border-radius: 4px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-}
-
-[data-tooltip]:hover:before {
-    opacity: 1;
-    visibility: visible;
-    bottom: calc(100% + 5px);
-}
-
-/* Error message styling */
-.error-message {
-    background-color: #FEE2E2;
-    border: 1px solid #EF4444;
-    border-radius: 0.375rem;
-    padding: 1rem;
-    margin-top: 1rem;
-    color: #991B1B;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    transition: opacity 0.3s;
 }
 
 /* Loading shimmer effect */
@@ -158,13 +166,22 @@
     100% { background-position: 200% 0; }
 }
 
-/* Engagement score animation */
+/* Score animation */
+.score-update {
+    animation: scoreUpdate 0.5s ease-out;
+}
+
 @keyframes scoreUpdate {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
 }
 
-.score-update {
-    animation: scoreUpdate 0.5s ease-out;
+/* Platform icon animations */
+.platform-icon {
+    transition: transform 0.3s ease;
+}
+
+.platform-icon:hover {
+    transform: scale(1.2);
 }
