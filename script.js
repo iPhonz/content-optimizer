@@ -2,229 +2,239 @@
 const GEMINI_API_KEY = 'AIzaSyChlnFPC5eOpr1VdrViCTj6PJxiQ52xm6M';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
-// Platform constraints
+// Enhanced platform constraints with content patterns
 const PLATFORM_CONSTRAINTS = {
     twitter: {
         maxLength: 280,
         mediaSupport: ['images', 'videos', 'gifs'],
         hashtagLimit: 3,
         bestTimeToPost: ['12:00 PM', '5:00 PM', '6:00 PM'],
-        features: ['polls', 'threads', 'spaces']
+        features: ['polls', 'threads', 'spaces'],
+        contentPatterns: {
+            hashtagUsage: true,
+            mentionsUsage: true,
+            brevity: true,
+            newsRelevant: true,
+            discussionPromoting: true
+        },
+        audienceTraits: ['news-focused', 'tech-savvy', 'politically engaged', 'real-time interaction']
     },
     instagram: {
         maxLength: 2200,
         mediaSupport: ['images', 'videos', 'stories', 'reels'],
         hashtagLimit: 30,
         bestTimeToPost: ['11:00 AM', '2:00 PM', '7:00 PM'],
-        features: ['carousels', 'reels', 'stories']
+        features: ['carousels', 'reels', 'stories'],
+        contentPatterns: {
+            visualFocus: true,
+            emotionalAppeal: true,
+            lifestyleContent: true,
+            behindTheScenes: true,
+            storytelling: true
+        },
+        audienceTraits: ['visual-oriented', 'younger demographic', 'lifestyle-focused', 'brand-conscious']
     },
     linkedin: {
         maxLength: 3000,
         mediaSupport: ['images', 'videos', 'documents'],
         hashtagLimit: 5,
         bestTimeToPost: ['9:00 AM', '12:00 PM', '3:00 PM'],
-        features: ['articles', 'polls', 'events']
+        features: ['articles', 'polls', 'events'],
+        contentPatterns: {
+            professionalTone: true,
+            industryInsights: true,
+            careerFocus: true,
+            longFormContent: true,
+            businessRelevant: true
+        },
+        audienceTraits: ['professionals', 'decision-makers', 'industry-focused', 'B2B-oriented']
     },
     facebook: {
         maxLength: 63206,
         mediaSupport: ['images', 'videos', 'live', 'stories'],
         hashtagLimit: 8,
         bestTimeToPost: ['1:00 PM', '3:00 PM', '9:00 AM'],
-        features: ['polls', 'events', 'groups']
+        features: ['polls', 'events', 'groups'],
+        contentPatterns: {
+            communityFocus: true,
+            personalStories: true,
+            eventPromotion: true,
+            diverseContent: true,
+            localRelevance: true
+        },
+        audienceTraits: ['broad demographic', 'community-oriented', 'event-interested', 'family-focused']
     },
     tiktok: {
         maxLength: 2200,
         mediaSupport: ['videos', 'live'],
         hashtagLimit: 8,
         bestTimeToPost: ['10:00 AM', '2:00 PM', '7:00 PM'],
-        features: ['duets', 'stitches', 'effects']
+        features: ['duets', 'stitches', 'effects'],
+        contentPatterns: {
+            trendFocused: true,
+            entertainmentValue: true,
+            shortFormVideo: true,
+            musicIntegration: true,
+            viralPotential: true
+        },
+        audienceTraits: ['Gen-Z', 'trend-focused', 'entertainment-seeking', 'creative']
     }
 };
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get DOM elements
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const contentInput = document.getElementById('content');
-    const platformSelect = document.getElementById('platform');
-    const contentTypeSelect = document.getElementById('contentType');
-    const resultsSection = document.getElementById('results');
-    const characterCount = document.getElementById('characterCount');
-
-    // Character count update
-    contentInput.addEventListener('input', function() {
-        const platform = platformSelect.value;
-        const count = this.value.length;
-        const maxLength = platform !== 'all' ? PLATFORM_CONSTRAINTS[platform]?.maxLength : '∞';
+function analyzePlatformFit(content, contentType) {
+    const analysis = {};
+    const contentLower = content.toLowerCase();
+    
+    // Helper functions for content analysis
+    const hasHashtags = content.includes('#');
+    const hasMentions = content.includes('@');
+    const isLongForm = content.length > 1000;
+    const hasEmotionalWords = contentLower.match(/love|amazing|exciting|wonderful|great|fantastic|incredible/g);
+    const hasProfessionalTerms = contentLower.match(/business|professional|industry|career|growth|development|strategy/g);
+    const hasEntertainmentValue = contentLower.match(/fun|exciting|wow|amazing|cool|awesome|incredible/g);
+    
+    // Score each platform
+    Object.entries(PLATFORM_CONSTRAINTS).forEach(([platform, constraints]) => {
+        let score = 0;
+        const reasons = [];
         
-        characterCount.textContent = `${count} / ${maxLength} characters`;
-        if (platform !== 'all' && count > PLATFORM_CONSTRAINTS[platform]?.maxLength) {
-            characterCount.classList.add('text-red-500');
+        // Length compatibility
+        if (content.length <= constraints.maxLength) {
+            score += 20;
         } else {
-            characterCount.classList.remove('text-red-500');
+            reasons.push('Content length exceeds platform limit');
         }
+        
+        // Content type compatibility
+        if (constraints.mediaSupport.includes(contentType)) {
+            score += 20;
+            reasons.push(`${platform} is optimized for ${contentType} content`);
+        }
+        
+        // Pattern matching
+        const patterns = constraints.contentPatterns;
+        if (patterns.hashtagUsage && hasHashtags) score += 10;
+        if (patterns.mentionsUsage && hasMentions) score += 10;
+        if (patterns.professionalTone && hasProfessionalTerms) score += 15;
+        if (patterns.emotionalAppeal && hasEmotionalWords) score += 15;
+        if (patterns.longFormContent && isLongForm) score += 15;
+        if (patterns.entertainmentValue && hasEntertainmentValue) score += 15;
+        
+        analysis[platform] = {
+            score,
+            reasons,
+            audienceMatch: constraints.audienceTraits,
+            bestTimes: constraints.bestTimeToPost
+        };
     });
+    
+    return analysis;
+}
 
-    // Analyze button click handler
-    analyzeBtn.addEventListener('click', async function() {
-        const content = contentInput.value.trim();
-        const platform = platformSelect.value;
-        const contentType = contentTypeSelect.value;
+async function analyzeContentWithGemini(content, platform, contentType) {
+    // Get platform recommendations first
+    const platformAnalysis = analyzePlatformFit(content, contentType);
+    
+    const prompt = `
+        Act as an expert social media strategist. Analyze this ${contentType} content:
+        "${content}"
 
-        if (!content) {
-            alert('Please enter some content to analyze');
-            return;
-        }
+        Platform analysis results:
+        ${JSON.stringify(platformAnalysis, null, 2)}
 
-        // Show loading state
-        analyzeBtn.disabled = true;
-        analyzeBtn.innerHTML = '<span class="loading">Analyzing...</span>';
-
-        try {
-            const analysis = await analyzeContentWithGemini(content, platform, contentType);
-            displayResults(analysis, platform);
-        } catch (error) {
-            console.error('Error:', error);
-            resultsSection.innerHTML = `
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h3 class="font-semibold text-red-800 mb-2">Analysis Error</h3>
-                    <p class="text-red-700">Sorry, there was an error analyzing your content. Please try again.</p>
-                </div>
-            `;
-        } finally {
-            // Reset button
-            analyzeBtn.disabled = false;
-            analyzeBtn.innerHTML = 'Analyze & Optimize';
-        }
-    });
-
-    async function analyzeContentWithGemini(content, platform, contentType) {
-        const prompt = `
-            Act as an expert social media strategist. Analyze this ${contentType} content for ${platform}:
-            "${content}"
-
-            Consider:
-            1. Content clarity and engagement potential
-            2. Platform-specific best practices
-            3. Hashtag strategy
-            4. Timing recommendations
-            5. Media suggestions
-            6. Audience targeting
-
-            Respond in this JSON format only:
-            {
-                "suggestions": [
-                    "suggestion1",
-                    "suggestion2",
-                    "suggestion3"
-                ],
-                "engagementScore": 8.5,
-                "scoreExplanation": "Explanation of score",
-                "estimatedReach": "2.4K",
-                "reachExplanation": "Explanation of reach",
-                "contentStrengths": [
-                    "strength1",
-                    "strength2"
-                ],
-                "contentWeaknesses": [
-                    "weakness1",
-                    "weakness2"
-                ],
-                "platformSpecific": {
-                    "tips": [
-                        "platform tip 1",
-                        "platform tip 2"
-                    ],
-                    "timing": "Best posting time suggestion",
-                    "hashtagStrategy": "Hashtag recommendations"
+        Provide recommendations in this JSON format:
+        {
+            "platformRecommendations": {
+                "bestPlatforms": ["platform1", "platform2"],
+                "reasoning": ["reason1", "reason2"]
+            },
+            "contentOptimization": {
+                "suggestions": ["suggestion1", "suggestion2"],
+                "improvements": ["improvement1", "improvement2"]
+            },
+            "engagementPrediction": {
+                "score": 8.5,
+                "explanation": "Reason for score"
+            },
+            "crossPostingStrategy": {
+                "recommended": true/false,
+                "modifications": {
+                    "platform1": "modification1",
+                    "platform2": "modification2"
                 }
             }
-        `;
-
-        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }]
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('API request failed');
         }
+    `;
 
-        const data = await response.json();
-        const textResponse = data.candidates[0].content.parts[0].text;
-        const jsonStartIndex = textResponse.indexOf('{');
-        const jsonEndIndex = textResponse.lastIndexOf('}') + 1;
-        return JSON.parse(textResponse.substring(jsonStartIndex, jsonEndIndex));
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }]
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error('API request failed');
     }
 
-    function displayResults(analysis, platform) {
+    const data = await response.json();
+    const textResponse = data.candidates[0].content.parts[0].text;
+    const jsonStartIndex = textResponse.indexOf('{');
+    const jsonEndIndex = textResponse.lastIndexOf('}') + 1;
+    return {
+        aiAnalysis: JSON.parse(textResponse.substring(jsonStartIndex, jsonEndIndex)),
+        platformAnalysis
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // ... (previous DOM element selection code)
+
+    function displayResults(analysis) {
         resultsSection.classList.remove('hidden');
-        resultsSection.innerHTML = `
-            <div class="space-y-6">
-                <!-- Platform-specific Analysis -->
-                <div class="bg-white rounded-lg shadow-sm p-4">
-                    <h3 class="font-semibold text-gray-800 mb-3">Platform Optimization</h3>
-                    ${platform !== 'all' ? `
-                        <div class="space-y-2">
-                            <p class="text-sm"><strong>Best Time to Post:</strong> ${analysis.platformSpecific.timing}</p>
-                            <p class="text-sm"><strong>Hashtag Strategy:</strong> ${analysis.platformSpecific.hashtagStrategy}</p>
-                            <div class="mt-3">
-                                <strong class="text-sm">Platform Tips:</strong>
-                                <ul class="mt-1 space-y-1 text-sm">
-                                    ${analysis.platformSpecific.tips.map(tip => `<li>• ${tip}</li>`).join('')}
-                                </ul>
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <!-- AI Suggestions -->
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h3 class="font-semibold text-green-800 mb-2">Content Analysis</h3>
-                    <div class="space-y-4">
+        
+        // Platform Recommendations Section
+        const platformRecommendations = document.createElement('div');
+        platformRecommendations.className = 'bg-white rounded-lg shadow-sm p-4 mb-6';
+        platformRecommendations.innerHTML = `
+            <h3 class="font-semibold text-gray-800 mb-3">Platform Recommendations</h3>
+            <div class="space-y-4">
+                ${analysis.aiAnalysis.platformRecommendations.bestPlatforms.map((platform, index) => `
+                    <div class="flex items-center space-x-3 p-2 bg-blue-50 rounded-md">
+                        <i class="fab fa-${platform.toLowerCase()} text-xl platform-${platform.toLowerCase()}"></i>
                         <div>
-                            <strong class="text-sm">Suggestions:</strong>
-                            <ul class="mt-1 space-y-1 text-sm">
-                                ${analysis.suggestions.map(suggestion => `<li>• ${suggestion}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div>
-                            <strong class="text-sm">Strengths:</strong>
-                            <ul class="mt-1 space-y-1 text-sm">
-                                ${analysis.contentStrengths.map(strength => `<li>• ${strength}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div>
-                            <strong class="text-sm">Areas to Improve:</strong>
-                            <ul class="mt-1 space-y-1 text-sm">
-                                ${analysis.contentWeaknesses.map(weakness => `<li>• ${weakness}</li>`).join('')}
-                            </ul>
+                            <div class="font-medium">${platform}</div>
+                            <div class="text-sm text-gray-600">${analysis.aiAnalysis.platformRecommendations.reasoning[index]}</div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Metrics -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <h3 class="font-semibold text-gray-800 mb-2">Engagement Score</h3>
-                        <div class="text-3xl font-bold text-blue-600">${analysis.engagementScore}/10</div>
-                        <div class="text-sm text-gray-600 mt-1">${analysis.scoreExplanation}</div>
-                    </div>
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <h3 class="font-semibold text-gray-800 mb-2">Estimated Reach</h3>
-                        <div class="text-3xl font-bold text-blue-600">${analysis.estimatedReach}</div>
-                        <div class="text-sm text-gray-600 mt-1">${analysis.reachExplanation}</div>
-                    </div>
-                </div>
+                `).join('')}
             </div>
+            
+            ${analysis.aiAnalysis.crossPostingStrategy.recommended ? `
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-800 mb-2">Cross-Posting Strategy</h4>
+                    <div class="space-y-2">
+                        ${Object.entries(analysis.aiAnalysis.crossPostingStrategy.modifications).map(([platform, modification]) => `
+                            <div class="text-sm">
+                                <span class="font-medium">${platform}:</span> ${modification}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
         `;
+        
+        resultsSection.insertBefore(platformRecommendations, resultsSection.firstChild);
+        
+        // ... (rest of the existing display code)
     }
+    
+    // ... (rest of the event handlers and utility functions)
 });
