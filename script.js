@@ -1,231 +1,48 @@
-// Platform constraints and API configuration remain the same...
+// API Configuration
+const GEMINI_API_KEY = 'AIzaSyChlnFPC5eOpr1VdrViCTj6PJxiQ52xm6M';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Previous DOM element declarations...
+    // Get DOM elements
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const contentInput = document.getElementById('content');
+    const platformSelect = document.getElementById('platform');
+    const contentTypeSelect = document.getElementById('contentType');
+    const mediaUploadSection = document.getElementById('mediaUpload');
+    const mediaFileInput = document.getElementById('mediaFile');
+    const mediaPreview = document.getElementById('mediaPreview');
+    const imagePreview = document.getElementById('imagePreview');
+    const videoPreview = document.getElementById('videoPreview');
+    const removeMediaBtn = document.getElementById('removeMedia');
+    const resultsSection = document.getElementById('results');
+    const characterCount = document.getElementById('characterCount');
 
-    // Enhanced media analysis functions
-    async function analyzeMediaWithAI(mediaAnalysis, content) {
-        const prompt = `
-            Analyze this ${mediaAnalysis.type} content for social media optimization:
-            Media Details: ${JSON.stringify(mediaAnalysis, null, 2)}
-            Post Content: "${content}"
+    // Debug log to check if elements are found
+    console.log('Elements found:', {
+        analyzeBtn,
+        contentInput,
+        resultsSection
+    });
 
-            Consider:
-            1. Media quality and optimization
-            2. Platform-specific requirements
-            3. Visual content best practices
-            4. Accessibility considerations
-            5. Engagement potential
-            
-            Provide recommendations in this JSON format:
-            {
-                "mediaScore": {
-                    "score": 85,
-                    "explanation": "Detailed explanation of score"
-                },
-                "improvements": [
-                    "specific improvement 1",
-                    "specific improvement 2"
-                ],
-                "platformSpecific": {
-                    "instagram": ["suggestion1", "suggestion2"],
-                    "twitter": ["suggestion1", "suggestion2"],
-                    "facebook": ["suggestion1", "suggestion2"]
-                },
-                "accessibility": [
-                    "accessibility tip 1",
-                    "accessibility tip 2"
-                ],
-                "engagementTips": [
-                    "engagement tip 1",
-                    "engagement tip 2"
-                ]
-            }
-        `;
-
-        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 1024,
-                }
-            })
-        });
-
-        if (!response.ok) throw new Error('AI analysis failed');
-
-        const data = await response.json();
-        const textResponse = data.candidates[0].content.parts[0].text;
-        const jsonStartIndex = textResponse.indexOf('{');
-        const jsonEndIndex = textResponse.lastIndexOf('}') + 1;
-        return JSON.parse(textResponse.substring(jsonStartIndex, jsonEndIndex));
-    }
-
-    function displayEnhancedMediaAnalysis(mediaAnalysis, aiAnalysis) {
-        return `
-            <div class="media-analysis-container bg-white rounded-lg shadow-sm p-6 mt-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Technical Analysis -->
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Technical Analysis</h3>
-                        <div class="space-y-3">
-                            ${getMediaTechnicalDetails(mediaAnalysis)}
-                        </div>
-                    </div>
-
-                    <!-- AI Recommendations -->
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">AI Recommendations</h3>
-                        <div class="space-y-4">
-                            ${getAIRecommendations(aiAnalysis)}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Platform Compatibility -->
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Platform Compatibility</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        ${getPlatformCompatibility(mediaAnalysis, aiAnalysis)}
-                    </div>
-                </div>
-
-                <!-- Accessibility Tips -->
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Accessibility & Engagement</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        ${getAccessibilityTips(aiAnalysis)}
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    function getMediaTechnicalDetails(mediaAnalysis) {
-        const details = [];
-        
-        if (mediaAnalysis.type === 'image') {
-            details.push({
-                icon: 'fas fa-expand',
-                label: 'Dimensions',
-                value: `${mediaAnalysis.dimensions.width} × ${mediaAnalysis.dimensions.height}`
-            });
-            details.push({
-                icon: 'fas fa-crop',
-                label: 'Aspect Ratio',
-                value: mediaAnalysis.dimensions.aspectRatio
-            });
-        } else if (mediaAnalysis.type === 'video') {
-            details.push({
-                icon: 'fas fa-clock',
-                label: 'Duration',
-                value: mediaAnalysis.duration
-            });
-            details.push({
-                icon: 'fas fa-film',
-                label: 'Resolution',
-                value: `${mediaAnalysis.dimensions.width}p`
-            });
+    // Content type change handler
+    contentTypeSelect.addEventListener('change', function() {
+        const showMedia = ['image', 'video'].includes(this.value);
+        mediaUploadSection.classList.toggle('hidden', !showMedia);
+        if (!showMedia) {
+            clearMediaPreview();
         }
+    });
 
-        details.push({
-            icon: 'fas fa-file-alt',
-            label: 'Format',
-            value: mediaAnalysis.format
-        });
-        details.push({
-            icon: 'fas fa-weight-hanging',
-            label: 'File Size',
-            value: mediaAnalysis.size
-        });
+    // Character count handler
+    contentInput.addEventListener('input', function() {
+        const count = this.value.length;
+        characterCount.textContent = `${count} characters`;
+    });
 
-        return details.map(detail => `
-            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <i class="${detail.icon} text-blue-500 w-5"></i>
-                <div>
-                    <div class="text-sm text-gray-500">${detail.label}</div>
-                    <div class="font-medium">${detail.value}</div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function getAIRecommendations(aiAnalysis) {
-        return `
-            <div class="p-4 bg-blue-50 rounded-lg">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="font-medium text-blue-800">Media Score</span>
-                    <span class="text-2xl font-bold text-blue-600">${aiAnalysis.mediaScore.score}/100</span>
-                </div>
-                <p class="text-sm text-blue-700">${aiAnalysis.mediaScore.explanation}</p>
-            </div>
-
-            <div class="space-y-2">
-                ${aiAnalysis.improvements.map(improvement => `
-                    <div class="flex items-start space-x-2 p-2 bg-gray-50 rounded">
-                        <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
-                        <span class="text-sm">${improvement}</span>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    function getPlatformCompatibility(mediaAnalysis, aiAnalysis) {
-        const platforms = ['instagram', 'twitter', 'facebook'];
+    // Main analyze button click handler
+    analyzeBtn.addEventListener('click', async function() {
+        console.log('Analyze button clicked'); // Debug log
         
-        return platforms.map(platform => {
-            const compatibility = mediaAnalysis.platformCompatibility[platform];
-            const suggestions = aiAnalysis.platformSpecific[platform];
-            
-            return `
-                <div class="p-4 ${compatibility.compatible ? 'bg-green-50' : 'bg-red-50'} rounded-lg">
-                    <div class="flex items-center space-x-2 mb-3">
-                        <i class="fab fa-${platform} text-xl ${compatibility.compatible ? 'text-green-600' : 'text-red-600'}"></i>
-                        <span class="font-medium">${platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
-                    </div>
-                    <p class="text-sm mb-3 ${compatibility.compatible ? 'text-green-700' : 'text-red-700'}">
-                        ${compatibility.message}
-                    </p>
-                    <div class="text-xs space-y-1">
-                        ${suggestions.map(suggestion => `
-                            <div class="flex items-start space-x-1">
-                                <i class="fas fa-check-circle mt-1"></i>
-                                <span>${suggestion}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function getAccessibilityTips(aiAnalysis) {
-        const combinedTips = [
-            ...aiAnalysis.accessibility.map(tip => ({ type: 'accessibility', content: tip })),
-            ...aiAnalysis.engagementTips.map(tip => ({ type: 'engagement', content: tip }))
-        ];
-
-        return combinedTips.map(tip => `
-            <div class="p-3 ${tip.type === 'accessibility' ? 'bg-purple-50' : 'bg-indigo-50'} rounded-lg">
-                <div class="flex items-start space-x-2">
-                    <i class="fas ${tip.type === 'accessibility' ? 'fa-universal-access' : 'fa-chart-line'} 
-                       ${tip.type === 'accessibility' ? 'text-purple-600' : 'text-indigo-600'} mt-1"></i>
-                    <span class="text-sm">${tip.content}</span>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // Update the main analyze function
-    async function analyzeContent() {
         const content = contentInput.value.trim();
         const platform = platformSelect.value;
         const contentType = contentTypeSelect.value;
@@ -238,28 +55,67 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading state
         analyzeBtn.disabled = true;
         analyzeBtn.innerHTML = '<span class="loading">Analyzing...</span>';
-        resultsSection.innerHTML = '<div class="analyzing-media">Analyzing content and media...</div>';
+        resultsSection.classList.remove('hidden');
+        resultsSection.innerHTML = '<div class="analyzing-media">Analyzing content...</div>';
 
         try {
-            let mediaAnalysis = null;
-            let aiMediaAnalysis = null;
+            console.log('Making API request...'); // Debug log
+            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: `
+                                Analyze this ${contentType} content for ${platform}:
+                                "${content}"
+                                
+                                Provide recommendations in this JSON format:
+                                {
+                                    "suggestions": [
+                                        "suggestion1",
+                                        "suggestion2",
+                                        "suggestion3"
+                                    ],
+                                    "engagementScore": 8.5,
+                                    "scoreExplanation": "Explanation of score",
+                                    "platformSpecific": {
+                                        "tips": [
+                                            "platform tip 1",
+                                            "platform tip 2"
+                                        ],
+                                        "timing": "Best posting time",
+                                        "hashtagStrategy": "Hashtag recommendations"
+                                    }
+                                }
+                            `
+                        }]
+                    }]
+                })
+            });
 
-            if (currentMediaFile) {
-                mediaAnalysis = await analyzeMedia(currentMediaFile);
-                aiMediaAnalysis = await analyzeMediaWithAI(mediaAnalysis, content);
+            console.log('API response received:', response.status); // Debug log
+
+            if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`);
             }
 
-            const contentAnalysis = await analyzeContentWithGemini(content, platform, contentType);
-            
-            displayResults(contentAnalysis, platform, contentType);
-            
-            if (mediaAnalysis && aiMediaAnalysis) {
-                const mediaAnalysisHTML = displayEnhancedMediaAnalysis(mediaAnalysis, aiMediaAnalysis);
-                resultsSection.insertAdjacentHTML('beforeend', mediaAnalysisHTML);
-            }
+            const data = await response.json();
+            console.log('API data:', data); // Debug log
+
+            // Parse the AI response
+            const textResponse = data.candidates[0].content.parts[0].text;
+            const jsonStartIndex = textResponse.indexOf('{');
+            const jsonEndIndex = textResponse.lastIndexOf('}') + 1;
+            const analysis = JSON.parse(textResponse.substring(jsonStartIndex, jsonEndIndex));
+
+            // Display results
+            displayResults(analysis, platform);
 
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Analysis error:', error);
             resultsSection.innerHTML = `
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <h3 class="font-semibold text-red-800 mb-2">Analysis Error</h3>
@@ -271,8 +127,130 @@ document.addEventListener('DOMContentLoaded', function() {
             analyzeBtn.disabled = false;
             analyzeBtn.innerHTML = 'Analyze & Optimize';
         }
+    });
+
+    function displayResults(analysis, platform) {
+        resultsSection.innerHTML = `
+            <div class="space-y-6">
+                <!-- Suggestions -->
+                <div class="bg-white rounded-lg shadow-sm p-4">
+                    <h3 class="font-semibold text-gray-800 mb-3">Content Suggestions</h3>
+                    <ul class="space-y-2">
+                        ${analysis.suggestions.map(suggestion => `
+                            <li class="flex items-start space-x-2">
+                                <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
+                                <span>${suggestion}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+
+                <!-- Platform-specific Tips -->
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 mb-3">Platform Recommendations</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <strong class="text-blue-800">Best Posting Time:</strong>
+                            <p class="text-blue-600">${analysis.platformSpecific.timing}</p>
+                        </div>
+                        <div>
+                            <strong class="text-blue-800">Hashtag Strategy:</strong>
+                            <p class="text-blue-600">${analysis.platformSpecific.hashtagStrategy}</p>
+                        </div>
+                        <div class="space-y-2">
+                            ${analysis.platformSpecific.tips.map(tip => `
+                                <div class="flex items-start space-x-2">
+                                    <i class="fas fa-check-circle text-blue-500 mt-1"></i>
+                                    <span>${tip}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Engagement Score -->
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-gray-800">Engagement Score</h3>
+                        <div class="text-2xl font-bold text-green-600">${analysis.engagementScore}/10</div>
+                    </div>
+                    <p class="text-green-700">${analysis.scoreExplanation}</p>
+                </div>
+            </div>
+        `;
     }
 
-    // Update event listeners
-    analyzeBtn.addEventListener('click', analyzeContent);
+    // Media file handlers
+    mediaFileInput.addEventListener('change', handleFileSelect);
+    mediaUploadSection.addEventListener('dragover', handleDragOver);
+    mediaUploadSection.addEventListener('drop', handleDrop);
+    removeMediaBtn.addEventListener('click', clearMediaPreview);
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+            validateAndPreviewMedia(file);
+        }
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        mediaUploadSection.classList.add('border-blue-500');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        mediaUploadSection.classList.remove('border-blue-500');
+        
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            validateAndPreviewMedia(file);
+        }
+    }
+
+    function validateAndPreviewMedia(file) {
+        const contentType = contentTypeSelect.value;
+        const isImage = file.type.startsWith('image/');
+        const isVideo = file.type.startsWith('video/');
+        
+        if ((contentType === 'image' && isImage) || (contentType === 'video' && isVideo)) {
+            if (file.size <= 10 * 1024 * 1024) { // 10MB limit
+                previewMedia(file);
+            } else {
+                alert('File size must be less than 10MB');
+            }
+        } else {
+            alert(`Please upload a ${contentType} file`);
+        }
+    }
+
+    function previewMedia(file) {
+        mediaPreview.classList.remove('hidden');
+        
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.classList.remove('hidden');
+                videoPreview.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else if (file.type.startsWith('video/')) {
+            const url = URL.createObjectURL(file);
+            videoPreview.src = url;
+            videoPreview.classList.remove('hidden');
+            imagePreview.classList.add('hidden');
+        }
+    }
+
+    function clearMediaPreview() {
+        mediaPreview.classList.add('hidden');
+        imagePreview.classList.add('hidden');
+        videoPreview.classList.add('hidden');
+        imagePreview.src = '';
+        videoPreview.src = '';
+        mediaFileInput.value = '';
+    }
 });
