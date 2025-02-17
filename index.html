@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AI-powered social media content optimization tool">
+    <meta name="description" content="AI-powered social media content optimization tool using Google Gemini">
     <meta name="theme-color" content="#3B82F6">
+    
+    <!-- CORS Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://generativelanguage.googleapis.com; style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+    
     <title>AI Content Optimizer</title>
     
     <!-- Favicon -->
@@ -14,9 +18,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 
-    <!-- Open Graph tags for social sharing -->
+    <!-- Open Graph tags -->
     <meta property="og:title" content="AI Content Optimizer">
-    <meta property="og:description" content="Optimize your social media content for maximum engagement">
+    <meta property="og:description" content="Optimize your social media content using Google Gemini AI">
     <meta property="og:type" content="website">
 </head>
 <body class="bg-gray-100">
@@ -24,7 +28,7 @@
         <div class="bg-white rounded-lg shadow-lg p-6">
             <header class="mb-6">
                 <h1 class="text-2xl font-bold text-gray-800">AI Content Optimizer</h1>
-                <p class="text-gray-600">Optimize your social media content for maximum engagement</p>
+                <p class="text-gray-600">Optimize your social media content using Google Gemini AI</p>
             </header>
 
             <div class="space-y-6">
@@ -55,9 +59,9 @@
                         <div id="timeSlots" class="grid grid-cols-3 gap-4"></div>
                     </div>
 
-                    <!-- Suggestions -->
+                    <!-- AI Analysis -->
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <h3 class="font-semibold text-green-800 mb-2">AI Suggestions</h3>
+                        <h3 class="font-semibold text-green-800 mb-2">AI Content Analysis</h3>
                         <ul id="suggestions" class="space-y-2 text-green-700"></ul>
                     </div>
 
@@ -72,7 +76,7 @@
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h3 class="font-semibold text-gray-800 mb-2">Engagement Score</h3>
                             <div id="score" class="text-3xl font-bold text-blue-600"></div>
-                            <div class="text-sm text-gray-600">Predicted engagement</div>
+                            <div class="text-sm text-gray-600">AI-predicted engagement</div>
                         </div>
                     </div>
                 </div>
@@ -82,6 +86,7 @@
         <!-- Footer -->
         <footer class="mt-8 text-center text-gray-600 text-sm">
             <p>Created by iPhonz - <a href="https://github.com/iPhonz/content-optimizer" class="text-blue-600 hover:text-blue-800">View on GitHub</a></p>
+            <p class="mt-2">Powered by Google Gemini AI</p>
         </footer>
     </div>
     
