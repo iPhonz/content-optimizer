@@ -1,6 +1,7 @@
-/* Additional custom styles */
+/* Loading animation */
 .loading {
     position: relative;
+    padding-left: 24px;
 }
 
 .loading::after {
@@ -8,7 +9,7 @@
     position: absolute;
     width: 16px;
     height: 16px;
-    top: 0;
+    top: 50%;
     left: 50%;
     margin-left: -8px;
     margin-top: -8px;
@@ -23,13 +24,16 @@
     100% { transform: rotate(360deg); }
 }
 
+/* Fade-in animation */
 .fade-in {
     animation: fadeIn 0.5s ease-in;
+    opacity: 0;
+    animation-fill-mode: forwards;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive adjustments */
@@ -45,19 +49,122 @@
 
 /* Enhanced visual feedback */
 .suggestion-item {
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .suggestion-item:hover {
     transform: translateX(5px);
+    background-color: rgba(167, 243, 208, 0.5);
 }
 
-/* Polish and refinements */
+.suggestion-item::before {
+    content: '';
+    position: absolute;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    background: linear-gradient(to right, transparent, #10B981, transparent);
+    transition: left 0.3s ease;
+}
+
+.suggestion-item:hover::before {
+    left: 0;
+}
+
+/* Metric cards enhancement */
 .metric-card {
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .metric-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.metric-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #3B82F6, #10B981);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover::after {
+    transform: scaleX(1);
+}
+
+/* Tooltip styles */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background-color: #1F2937;
+    color: white;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+[data-tooltip]:hover:before {
+    opacity: 1;
+    visibility: visible;
+    bottom: calc(100% + 5px);
+}
+
+/* Error message styling */
+.error-message {
+    background-color: #FEE2E2;
+    border: 1px solid #EF4444;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    color: #991B1B;
+}
+
+/* Loading shimmer effect */
+.shimmer {
+    background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.5) 50%,
+        rgba(255,255,255,0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Engagement score animation */
+@keyframes scoreUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.score-update {
+    animation: scoreUpdate 0.5s ease-out;
 }
