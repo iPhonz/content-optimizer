@@ -1,198 +1,278 @@
-// Previous code remains the same...
+// Platform constraints and API configuration remain the same...
 
-function displayMediaCompatibility(mediaAnalysis) {
-    if (!mediaAnalysis) return '';
+document.addEventListener('DOMContentLoaded', function() {
+    // Previous DOM element declarations...
 
-    const platforms = Object.keys(mediaAnalysis.platformCompatibility);
-    
-    return `
-        <div class="platform-compatibility mt-4">
-            <h4 class="font-medium text-gray-700 mb-3">Platform Compatibility</h4>
-            <div class="grid grid-cols-2 gap-4">
-                ${platforms.map(platform => {
-                    const compatibility = mediaAnalysis.platformCompatibility[platform];
-                    return `
-                        <div class="platform-card ${compatibility.compatible ? 'bg-green-50' : 'bg-red-50'}">
-                            <i class="fab fa-${platform.toLowerCase()} platform-icon ${compatibility.compatible ? 'text-green-600' : 'text-red-600'}"></i>
-                            <h5 class="font-medium mb-2">${platform.charAt(0).toUpperCase() + platform.slice(1)}</h5>
-                            <p class="text-sm ${compatibility.compatible ? 'text-green-700' : 'text-red-700'}">${compatibility.message}</p>
-                            <div class="mt-2 text-xs text-gray-600">
-                                ${compatibility.requirements.map(req => `<div>• ${req}</div>`).join('')}
-                            </div>
+    // Enhanced media analysis functions
+    async function analyzeMediaWithAI(mediaAnalysis, content) {
+        const prompt = `
+            Analyze this ${mediaAnalysis.type} content for social media optimization:
+            Media Details: ${JSON.stringify(mediaAnalysis, null, 2)}
+            Post Content: "${content}"
+
+            Consider:
+            1. Media quality and optimization
+            2. Platform-specific requirements
+            3. Visual content best practices
+            4. Accessibility considerations
+            5. Engagement potential
+            
+            Provide recommendations in this JSON format:
+            {
+                "mediaScore": {
+                    "score": 85,
+                    "explanation": "Detailed explanation of score"
+                },
+                "improvements": [
+                    "specific improvement 1",
+                    "specific improvement 2"
+                ],
+                "platformSpecific": {
+                    "instagram": ["suggestion1", "suggestion2"],
+                    "twitter": ["suggestion1", "suggestion2"],
+                    "facebook": ["suggestion1", "suggestion2"]
+                },
+                "accessibility": [
+                    "accessibility tip 1",
+                    "accessibility tip 2"
+                ],
+                "engagementTips": [
+                    "engagement tip 1",
+                    "engagement tip 2"
+                ]
+            }
+        `;
+
+        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                }
+            })
+        });
+
+        if (!response.ok) throw new Error('AI analysis failed');
+
+        const data = await response.json();
+        const textResponse = data.candidates[0].content.parts[0].text;
+        const jsonStartIndex = textResponse.indexOf('{');
+        const jsonEndIndex = textResponse.lastIndexOf('}') + 1;
+        return JSON.parse(textResponse.substring(jsonStartIndex, jsonEndIndex));
+    }
+
+    function displayEnhancedMediaAnalysis(mediaAnalysis, aiAnalysis) {
+        return `
+            <div class="media-analysis-container bg-white rounded-lg shadow-sm p-6 mt-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Technical Analysis -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Technical Analysis</h3>
+                        <div class="space-y-3">
+                            ${getMediaTechnicalDetails(mediaAnalysis)}
                         </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function optimizationSuggestions(mediaAnalysis) {
-    if (!mediaAnalysis) return '';
-
-    const suggestions = [];
-    const type = mediaAnalysis.type;
-
-    if (type === 'image') {
-        // Image optimization suggestions
-        const { width, height } = mediaAnalysis.dimensions;
-        const aspectRatio = parseFloat(mediaAnalysis.dimensions.aspectRatio);
-        const sizeInMB = parseFloat(mediaAnalysis.size);
-
-        if (width < 1080 || height < 1080) {
-            suggestions.push('Consider increasing image resolution for better quality across platforms');
-        }
-        if (sizeInMB > 5) {
-            suggestions.push('Image size exceeds recommended limits for some platforms. Consider compression');
-        }
-        if (aspectRatio < 0.8 || aspectRatio > 1.91) {
-            suggestions.push('Current aspect ratio may be cropped on some platforms. Consider resizing');
-        }
-    } else if (type === 'video') {
-        // Video optimization suggestions
-        const duration = parseFloat(mediaAnalysis.duration);
-        const sizeInMB = parseFloat(mediaAnalysis.size);
-
-        if (duration > 60) {
-            suggestions.push('Video length exceeds optimal duration for some platforms. Consider trimming');
-        }
-        if (sizeInMB > 100) {
-            suggestions.push('Video file size is large. Consider compression for better upload speed');
-        }
-        
-        suggestions.push('Add captions to improve accessibility and engagement');
-        suggestions.push('Consider creating platform-specific versions with different aspect ratios');
-    }
-
-    return suggestions.length ? `
-        <div class="mt-4">
-            <h4 class="font-medium text-gray-700 mb-3">Optimization Suggestions</h4>
-            <div class="space-y-2">
-                ${suggestions.map(suggestion => `
-                    <div class="optimization-tip">
-                        <i class="fas fa-lightbulb optimization-tip-icon"></i>
-                        <span>${suggestion}</span>
                     </div>
-                `).join('')}
-            </div>
-        </div>
-    ` : '';
-}
 
-// Add media quality analysis
-function analyzeMediaQuality(mediaAnalysis) {
-    if (!mediaAnalysis) return null;
+                    <!-- AI Recommendations -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">AI Recommendations</h3>
+                        <div class="space-y-4">
+                            ${getAIRecommendations(aiAnalysis)}
+                        </div>
+                    </div>
+                </div>
 
-    const quality = {
-        score: 0,
-        factors: []
-    };
+                <!-- Platform Compatibility -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Platform Compatibility</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        ${getPlatformCompatibility(mediaAnalysis, aiAnalysis)}
+                    </div>
+                </div>
 
-    if (mediaAnalysis.type === 'image') {
-        // Image quality factors
-        const { width, height } = mediaAnalysis.dimensions;
-        const resolution = width * height;
-        const sizeInMB = parseFloat(mediaAnalysis.size);
-
-        // Resolution score (0-4)
-        if (resolution >= 1920 * 1080) quality.score += 4;
-        else if (resolution >= 1280 * 720) quality.score += 3;
-        else if (resolution >= 800 * 600) quality.score += 2;
-        else quality.score += 1;
-
-        quality.factors.push(`Resolution: ${width}x${height}`);
-
-        // Size efficiency score (0-3)
-        const pixelDensity = sizeInMB / (resolution / (1000 * 1000));
-        if (pixelDensity < 0.5) quality.score += 3;
-        else if (pixelDensity < 1) quality.score += 2;
-        else quality.score += 1;
-
-        quality.factors.push(`File size efficiency: ${pixelDensity.toFixed(2)}MB/MP`);
-
-        // Aspect ratio score (0-3)
-        const aspectRatio = parseFloat(mediaAnalysis.dimensions.aspectRatio);
-        if (aspectRatio >= 0.8 && aspectRatio <= 1.91) quality.score += 3;
-        else if (aspectRatio >= 0.5 && aspectRatio <= 2) quality.score += 2;
-        else quality.score += 1;
-
-        quality.factors.push(`Aspect ratio: ${aspectRatio}`);
-
-    } else if (mediaAnalysis.type === 'video') {
-        // Video quality factors
-        const duration = parseFloat(mediaAnalysis.duration);
-        const sizeInMB = parseFloat(mediaAnalysis.size);
-
-        // Duration score (0-4)
-        if (duration <= 60) quality.score += 4;
-        else if (duration <= 120) quality.score += 3;
-        else if (duration <= 180) quality.score += 2;
-        else quality.score += 1;
-
-        quality.factors.push(`Duration: ${duration}s`);
-
-        // Size efficiency score (0-3)
-        const sizePerSecond = sizeInMB / duration;
-        if (sizePerSecond < 1) quality.score += 3;
-        else if (sizePerSecond < 2) quality.score += 2;
-        else quality.score += 1;
-
-        quality.factors.push(`File size efficiency: ${sizePerSecond.toFixed(2)}MB/s`);
-
-        // Resolution score (0-3)
-        const { width, height } = mediaAnalysis.dimensions;
-        if (width >= 1920) quality.score += 3;
-        else if (width >= 1280) quality.score += 2;
-        else quality.score += 1;
-
-        quality.factors.push(`Resolution: ${width}x${height}`);
-    }
-
-    // Convert to percentage
-    quality.score = Math.min(100, Math.round((quality.score / 10) * 100));
-
-    return quality;
-}
-
-// Update the display function to include these new analyses
-function displayMediaAnalysis(mediaAnalysis) {
-    if (!mediaAnalysis) return '';
-
-    const quality = analyzeMediaQuality(mediaAnalysis);
-
-    return `
-        <div class="media-analysis">
-            <div class="flex justify-between items-center mb-4">
-                <h4 class="font-medium text-gray-700">Media Analysis</h4>
-                <div class="score-indicator" style="--score: ${quality.score}%">
-                    <span class="score-value">${quality.score}%</span>
+                <!-- Accessibility Tips -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Accessibility & Engagement</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${getAccessibilityTips(aiAnalysis)}
+                    </div>
                 </div>
             </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                ${quality.factors.map(factor => `
-                    <div class="media-stat">
-                        <i class="fas fa-check media-stat-icon"></i>
-                        <span>${factor}</span>
+        `;
+    }
+
+    function getMediaTechnicalDetails(mediaAnalysis) {
+        const details = [];
+        
+        if (mediaAnalysis.type === 'image') {
+            details.push({
+                icon: 'fas fa-expand',
+                label: 'Dimensions',
+                value: `${mediaAnalysis.dimensions.width} × ${mediaAnalysis.dimensions.height}`
+            });
+            details.push({
+                icon: 'fas fa-crop',
+                label: 'Aspect Ratio',
+                value: mediaAnalysis.dimensions.aspectRatio
+            });
+        } else if (mediaAnalysis.type === 'video') {
+            details.push({
+                icon: 'fas fa-clock',
+                label: 'Duration',
+                value: mediaAnalysis.duration
+            });
+            details.push({
+                icon: 'fas fa-film',
+                label: 'Resolution',
+                value: `${mediaAnalysis.dimensions.width}p`
+            });
+        }
+
+        details.push({
+            icon: 'fas fa-file-alt',
+            label: 'Format',
+            value: mediaAnalysis.format
+        });
+        details.push({
+            icon: 'fas fa-weight-hanging',
+            label: 'File Size',
+            value: mediaAnalysis.size
+        });
+
+        return details.map(detail => `
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <i class="${detail.icon} text-blue-500 w-5"></i>
+                <div>
+                    <div class="text-sm text-gray-500">${detail.label}</div>
+                    <div class="font-medium">${detail.value}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function getAIRecommendations(aiAnalysis) {
+        return `
+            <div class="p-4 bg-blue-50 rounded-lg">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="font-medium text-blue-800">Media Score</span>
+                    <span class="text-2xl font-bold text-blue-600">${aiAnalysis.mediaScore.score}/100</span>
+                </div>
+                <p class="text-sm text-blue-700">${aiAnalysis.mediaScore.explanation}</p>
+            </div>
+
+            <div class="space-y-2">
+                ${aiAnalysis.improvements.map(improvement => `
+                    <div class="flex items-start space-x-2 p-2 bg-gray-50 rounded">
+                        <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
+                        <span class="text-sm">${improvement}</span>
                     </div>
                 `).join('')}
             </div>
-
-            ${displayMediaCompatibility(mediaAnalysis)}
-            ${optimizationSuggestions(mediaAnalysis)}
-        </div>
-    `;
-}
-
-// Update the existing displayResults function to include the new media analysis
-function displayResults(analysis, platform, contentType) {
-    // Previous results display code...
-    
-    // Add media analysis section if media was uploaded
-    if (analysis.mediaAnalysis) {
-        const mediaAnalysisHTML = displayMediaAnalysis(analysis.mediaAnalysis);
-        resultsSection.insertAdjacentHTML('beforeend', mediaAnalysisHTML);
+        `;
     }
-}
 
-// The rest of your existing code remains the same...
+    function getPlatformCompatibility(mediaAnalysis, aiAnalysis) {
+        const platforms = ['instagram', 'twitter', 'facebook'];
+        
+        return platforms.map(platform => {
+            const compatibility = mediaAnalysis.platformCompatibility[platform];
+            const suggestions = aiAnalysis.platformSpecific[platform];
+            
+            return `
+                <div class="p-4 ${compatibility.compatible ? 'bg-green-50' : 'bg-red-50'} rounded-lg">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fab fa-${platform} text-xl ${compatibility.compatible ? 'text-green-600' : 'text-red-600'}"></i>
+                        <span class="font-medium">${platform.charAt(0).toUpperCase() + platform.slice(1)}</span>
+                    </div>
+                    <p class="text-sm mb-3 ${compatibility.compatible ? 'text-green-700' : 'text-red-700'}">
+                        ${compatibility.message}
+                    </p>
+                    <div class="text-xs space-y-1">
+                        ${suggestions.map(suggestion => `
+                            <div class="flex items-start space-x-1">
+                                <i class="fas fa-check-circle mt-1"></i>
+                                <span>${suggestion}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function getAccessibilityTips(aiAnalysis) {
+        const combinedTips = [
+            ...aiAnalysis.accessibility.map(tip => ({ type: 'accessibility', content: tip })),
+            ...aiAnalysis.engagementTips.map(tip => ({ type: 'engagement', content: tip }))
+        ];
+
+        return combinedTips.map(tip => `
+            <div class="p-3 ${tip.type === 'accessibility' ? 'bg-purple-50' : 'bg-indigo-50'} rounded-lg">
+                <div class="flex items-start space-x-2">
+                    <i class="fas ${tip.type === 'accessibility' ? 'fa-universal-access' : 'fa-chart-line'} 
+                       ${tip.type === 'accessibility' ? 'text-purple-600' : 'text-indigo-600'} mt-1"></i>
+                    <span class="text-sm">${tip.content}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Update the main analyze function
+    async function analyzeContent() {
+        const content = contentInput.value.trim();
+        const platform = platformSelect.value;
+        const contentType = contentTypeSelect.value;
+
+        if (!content) {
+            alert('Please enter some content to analyze');
+            return;
+        }
+
+        // Show loading state
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<span class="loading">Analyzing...</span>';
+        resultsSection.innerHTML = '<div class="analyzing-media">Analyzing content and media...</div>';
+
+        try {
+            let mediaAnalysis = null;
+            let aiMediaAnalysis = null;
+
+            if (currentMediaFile) {
+                mediaAnalysis = await analyzeMedia(currentMediaFile);
+                aiMediaAnalysis = await analyzeMediaWithAI(mediaAnalysis, content);
+            }
+
+            const contentAnalysis = await analyzeContentWithGemini(content, platform, contentType);
+            
+            displayResults(contentAnalysis, platform, contentType);
+            
+            if (mediaAnalysis && aiMediaAnalysis) {
+                const mediaAnalysisHTML = displayEnhancedMediaAnalysis(mediaAnalysis, aiMediaAnalysis);
+                resultsSection.insertAdjacentHTML('beforeend', mediaAnalysisHTML);
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            resultsSection.innerHTML = `
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-red-800 mb-2">Analysis Error</h3>
+                    <p class="text-red-700">Sorry, there was an error analyzing your content: ${error.message}</p>
+                </div>
+            `;
+        } finally {
+            // Reset button
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = 'Analyze & Optimize';
+        }
+    }
+
+    // Update event listeners
+    analyzeBtn.addEventListener('click', analyzeContent);
+});
